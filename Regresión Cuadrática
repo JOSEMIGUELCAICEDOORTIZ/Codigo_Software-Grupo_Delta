@@ -27,7 +27,7 @@ void loop() {
     while(Serial.available()==0){}
     y[i]=Serial.parseFloat();
   };
-  //Realizamos las sumatorias necesarias para la matriz de regresión
+  //Creamos la matriz de regresión y encontramos los respectivos coeficientes
   for(int i=0;i<N;i++)
   {
   suma_x += x[i];
@@ -38,12 +38,9 @@ void loop() {
   suma_x4 += x[i]*x[i]*x[i]*x[i]; 
   suma_x2y += x[i]*x[i]*y[i];
   }
-  //Inicalizamos la matriz de regresión, la segunda matriz de multiplicación y la matriz identidad
   float matreg[3][3]={N,suma_x,suma_x2,suma_x,suma_x2,suma_x3,suma_x2,suma_x3,suma_x4};
   float I[3][3],pivote,aux;
   float Mult[1][3]={suma_y,suma_xy,suma_x2y};
-  
-  //Completamos los coeficientes de la matriz identidad
   for(int j=0;j<3;j++)
   {for(int k=0;k<3;k++)
   {
@@ -55,7 +52,6 @@ void loop() {
     
   }
   }
-  //Realizamos reducción por Gauss-Jordan
   for(int i=0;i<3;i++)
   {pivote = matreg[i][i];
     for(int k=0;k<3;k++)
@@ -77,7 +73,7 @@ void loop() {
   }
   }
   //Ahora la matriz identidad es la matriz inversa
-  //Entonces declaramos una matriz de coeficientes y realizamos la multiplicación de la inversa con la segunda matriz de sumatorias
+  //Entonces hacemos la multiplicación matricial para hallar los coeficientes
   float coef[1][3];
   
   coef[0][0]= I[0][0]*Mult[0][0] + I[0][1]*Mult[0][1] + I[0][2]*Mult[0][2];
@@ -90,7 +86,7 @@ void loop() {
   Serial.print('\n');
   Serial.print("Puntos Recopilados(x,y):");
   Serial.print('\n');
-  Serial.print("----------");
+  Serial.print("-------------");
   Serial.print('\n');
   for(int i=0;i<N;i++)
   {
@@ -99,7 +95,7 @@ void loop() {
   Serial.print(y[i]);
   Serial.print('\n');
   }
-  Serial.print("----------");
+  Serial.print("-------------");
   Serial.print('\n');
   Serial.print('\n');
   Serial.print("Coeficientes Resultantes:");
@@ -117,43 +113,5 @@ void loop() {
   Serial.print('\n');
   Serial.print("--------------------------");
   Serial.print('\n');
-  Serial.print(suma_x);
-  Serial.print('\n');
-  Serial.print(suma_xy);
-  Serial.print('\n');
-  Serial.print(suma_y);
-  Serial.print('\n');
-  Serial.print(suma_x2);
-  Serial.print('\n');
-  Serial.print(suma_x3);
-  Serial.print('\n');
-  Serial.print(suma_x4);
-  Serial.print('\n');
-  Serial.print(suma_x2y);
-  Serial.print('\n');
-  Serial.print('\n');
-  for(int i=0;i<3;i++)
-  {
-   for(int j=0;j<3;j++){
-    
-    Serial.print(matreg[i][j]);
-    Serial.print("  ");
-    
-  }
-  Serial.print('\n');
-  }
-  Serial.print('\n');
-  for(int i=0;i<3;i++)
-  {
-   for(int j=0;j<3;j++){
-    
-    Serial.print(I[i][j]);
-    Serial.print("  ");
-    
-  }
-  Serial.print('\n');
-  }
   while(1);
-  
-
 }
