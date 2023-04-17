@@ -1,0 +1,79 @@
+void setup() {
+//Encender el monitor serial
+Serial.begin(9600);
+}
+void loop() {
+//Conseguir número de pares ordenados (x,y)
+  int N;
+  float suma_x,suma_y,suma_xy,suma_x2;
+  float m,b;
+  Serial.println("Indique el numero de pares ordenados: ");
+  Serial.print('\n');
+  while(Serial.available()==0){}
+  N = Serial.parseInt();  
+  
+  float x[N],y[N];
+  //Pedimos los Datos de los pares
+  for(int i=0;i<N;i++){
+    Serial.print("Punto ");
+    Serial.print(i+1);
+    Serial.print('\n');
+    Serial.print("Coordenada x:");
+    Serial.print('\n');
+    while(Serial.available()==0){}
+    x[i]=Serial.parseFloat();
+    Serial.print("Coordenada y:");
+    Serial.print('\n');
+    while(Serial.available()==0){}
+    y[i]=Serial.parseFloat();
+  };
+  //Realizamos las sumatorias para la regresión
+  for(int i=0;i<N;i++){
+    suma_x += x[i];
+    suma_y += y[i];
+    suma_xy += x[i]*y[i];
+    suma_x2 += x[i]*x[i];
+  };
+  //Calculamos los coeficientes de la pendiente y el intersecto
+  m = ((N * suma_xy) - (suma_x * suma_y)) / ((N * suma_x2) - (suma_x * suma_x));
+  b = (suma_y - (m * suma_x)) / N;
+  //Imprimir Resultados
+  Serial.print('\n');
+  Serial.print("Puntos Recopilados(x,y):");
+  Serial.print('\n');
+  Serial.print("----------");
+  Serial.print('\n');
+  for(int i=0;i<N;i++)
+  {
+  Serial.print(x[i]); 
+  Serial.print(" ");
+  Serial.print(y[i]);
+  Serial.print('\n');
+  }
+  Serial.print("----------");
+  Serial.print('\n');
+  Serial.print('\n');
+  Serial.print("Coeficientes Resultantes:");
+  Serial.print('\n');
+  Serial.print("--------------------------");
+  Serial.print('\n');
+  Serial.print("m: ");
+  Serial.print(m);
+  Serial.print('\n');
+  Serial.print("b: ");
+  Serial.print(b); 
+  Serial.print('\n');
+  Serial.print("--------------------------");
+  Serial.print('\n');
+  Serial.print(suma_x);
+  Serial.print('\n');
+  Serial.print(suma_xy);
+  Serial.print('\n');
+  Serial.print(suma_y);
+  Serial.print('\n');
+  Serial.print(suma_x2);
+  Serial.print('\n');
+  while(1);
+  
+
+}
