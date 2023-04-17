@@ -65,14 +65,6 @@ void loop() {
   Serial.print('\n');
   Serial.print("--------------------------");
   Serial.print('\n');
-  Serial.print(suma_x);
-  Serial.print('\n');
-  Serial.print(suma_xy);
-  Serial.print('\n');
-  Serial.print(suma_y);
-  Serial.print('\n');
-  Serial.print(suma_x2);
-  Serial.print('\n');
   while(1);
   
 
