@@ -1,0 +1,21 @@
+#include<Servo.h>
+#include "HX711.h"
+//Creamos el objeto servo
+Servo marip;
+unsigned long tprevio = 0;
+void setup(){
+  marip.attach(9);
+  }
+  
+ void loop(){
+ marip.write(98);
+ delay(10000);
+ marip.write(33);
+ delay(1000);
+ marip.write(23);
+ delay(1000);
+ marip.write(15);
+ delay(1000);
+ marip.write(8);
+ delay(1000);
+ }
