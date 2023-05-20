@@ -1,0 +1,84 @@
+#include<Servo.h>
+#include "HX711.h"
+//Pines de entrada del HX711
+const int DOUT=A0;
+const int CLK=A1;
+//Creamos el objeto servo
+Servo marip;
+//Declaramos constantes y variables
+int angle;
+float k;
+float peso=-1;
+int dosif;
+int j=0;
+bool rep=true;
+bool bucle=false;
+bool depot=false;
+HX711 valvula;
+unsigned long tprevio = 0;
+void setup(){
+  marip.attach(9);
+  Serial.begin(9600);
+  //Calibrar la celda de carga antes de empezar el proceso de vaciado
+  valvula.begin(DOUT, CLK);
+  valvula.set_scale(468467.741935); // Establecemos la escala
+  valvula.tare(20);  //El peso actual es considerado Tara.
+  marip.write(98);
+}
+void loop(){
+k = valvula.get_units(10);
+Serial.println(k,3);
+
+if(k>0.005 && rep && !depot){
+  Serial.print("Peso detectado, Determine el tipo de envase:");
+  Serial.print('\n');
+  while(Serial.available()==0){}
+  j=Serial.parseInt();
+
+  /*
+    peso = valvula.get_units(10);
+    Serial.print("El peso en la valvula es: ");
+    Serial.print(peso,3);
+    Serial.print(" kg - ");
+    */
+    bucle = true;
+    depot = true;
+    if(j==1){
+    peso = 0.031;
+    j=0;
+    }else if(j==2){
+    peso = 0.040;
+    j=0;
+    }else if(j==3){
+    peso = 0.057;
+    j=0;
+    }
+}
+if(bucle){
+  rep = false;
+    if(valvula.get_units(10)<0.005){
+      rep = true;
+      bucle = false;
+      }
+  }
+if(depot){
+  if(valvula.get_units(10)-peso>0.200){
+          marip.write(8);
+          Serial.println("1era posición");
+          }else if(valvula.get_units(10)-peso<=0.200 && valvula.get_units(10)-peso>0.150 ){
+            marip.write(15);
+            Serial.println("2nda posición");
+          }else if(valvula.get_units(10)-peso<=0.150 && valvula.get_units(10)-peso>0.020 ){
+            marip.write(23);
+            Serial.println("3era posición");
+          }else if(valvula.get_units(10)-peso<=0.020 && valvula.get_units(10)-peso>0.005){
+            marip.write(33);
+            Serial.println("4rta posición");
+          }else if(valvula.get_units(10)-peso<=0.005){
+            marip.write(98);
+            Serial.println("5nta posición");
+            depot = false;
+          }
+  
+  }
+  }
