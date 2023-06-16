@@ -1,0 +1,147 @@
+#include "HX711.h"
+
+const int DOUT=A3;
+const int CLK=A2;
+bool k,l = false;
+const int n = 5;
+int c = 0;
+float x[n];
+float y[n];
+unsigned long tiempoa, tiempop;
+int pin6,pin9 = HIGH;
+HX711 balanza;
+
+void setup() {
+  Serial.begin(9600);
+  balanza.begin(DOUT, CLK);
+  Serial.print("Lectura del valor del ADC:  ");
+  Serial.println(balanza.read());
+  Serial.println("No ponga ningun  objeto sobre la balanza");
+  Serial.println("Destarando...");
+  Serial.println("...");
+  balanza.set_scale(414186.99); // Establecemos la escala
+  balanza.tare(20);  //El peso actual es considerado Tara.
+  pinMode(6,INPUT);
+  pinMode(9,INPUT);// Interruptores
+  Serial.println("Listo para pesar");  
+}
+
+void loop() {
+  Serial.print("Peso: ");
+  Serial.print(balanza.get_units(),3);
+  Serial.println("  kg");
+  pin6 = digitalRead(6);
+  pin9 = digitalRead(9);
+  if(pin6==LOW){//Tara
+  balanza.tare(20);
+  }else if(pin9==LOW && !k){//Minimos Cuadrados
+  k = true;
+  l = true;
+  tiempop = millis();
+  tiempoa = 0;
+  }
+  while(k==true && c<=n){
+    delay(200);
+    tiempoa = millis() - tiempop;
+    x[c] = balanza.get_units(3);
+    y[c] = tiempoa*0.001;
+    c++;
+    }
+  if(c>n && l == true){
+  c = 0;
+  k = false;
+  l = false;
+  float suma_x,suma_y,suma_xy,suma_x2,suma_x3,suma_x4,suma_x2y;
+  //Error de sumatoria
+  suma_x = x[0] + x[1] + x[2] + x[3] + x[4];
+  suma_x2 = pow(x[0],2) + pow(x[1],2) + pow(x[2],2) + pow(x[3],2) + pow(x[4],2);
+  suma_x3 = pow(x[0],3) + pow(x[1],3) + pow(x[2],3) + pow(x[3],3) + pow(x[4],3);
+  suma_x4 = pow(x[0],4) + pow(x[1],4) + pow(x[2],4) + pow(x[3],4) + pow(x[4],4);
+  for(int i=0;i<n;i++)
+  {
+  /*
+  suma_x += x[i];
+  */
+  suma_y += y[i];
+  suma_xy += x[i]*y[i];
+  /*
+  suma_x2 += x[i]*x[i];  
+  suma_x3 += x[i]*x[i]*x[i];
+  suma_x4 += x[i]*x[i]*x[i]*x[i];
+  */ 
+  suma_x2y += x[i]*x[i]*y[i];
+  }
+  float matreg[3][3]={n,suma_x,suma_x2,suma_x,suma_x2,suma_x3,suma_x2,suma_x3,suma_x4};
+  float I[3][3],pivote,aux;
+  float Mult[1][3]={suma_y,suma_xy,suma_x2y};
+  
+  for(int j=0;j<3;j++)
+  {for(int k=0;k<3;k++)
+  {
+    I[j][k]=0;
+    if(j==k)
+    {
+    I[j][k]=1;
+    }
+    
+  }
+  }
+  
+  for(int i=0;i<3;i++)
+  {pivote = matreg[i][i];
+    for(int k=0;k<3;k++)
+  {
+    matreg[i][k] /= pivote;
+    I[i][k] /= pivote;
+  }
+   for(int j=0;j<3;j++)
+  {
+    if(i!=j)
+    {
+    aux = matreg[j][i];
+      for(int k=0;k<3;k++)
+      {
+       matreg[j][k] =  matreg[j][k]-aux*matreg[i][k];
+       I[j][k] = I[j][k] - aux*I[i][k];
+      }
+    }
+  }
+  }
+  //Ahora la matriz identidad es la matriz inversa
+  //Entonces hacemos la multiplicación matricial para hallar los coeficientes
+  float coef[1][3];
+  
+  coef[0][0]= I[0][0]*Mult[0][0] + I[0][1]*Mult[0][1] + I[0][2]*Mult[0][2];
+  coef[0][1]= I[1][0]*Mult[0][0] + I[1][1]*Mult[0][1] + I[1][2]*Mult[0][2];
+  coef[0][2]= I[2][0]*Mult[0][0] + I[2][1]*Mult[0][1] + I[2][2]*Mult[0][2];
+  
+  //Mostrar Resultados
+  Serial.print("Puntos Recopilados(x,y):");
+  Serial.print('\n');
+  Serial.print("----------");
+  Serial.print('\n');
+  for(int i=0;i<n;i++)
+  {
+  Serial.print(x[i]); 
+  Serial.print(" ");
+  Serial.print(y[i]);
+  Serial.print('\n');
+  }
+  Serial.print("Coeficientes Resultantes:");
+  Serial.print('\n');
+  Serial.print('\n');
+  Serial.print("--------------------------");
+  Serial.print('\n');
+  Serial.print("b2: ");
+  Serial.print(coef[0][2]);
+  Serial.print('\n');
+  Serial.print("b1: ");
+  Serial.print(coef[0][1]); 
+  Serial.print('\n');
+  Serial.print("b0: ");
+  Serial.print(coef[0][0]); 
+  Serial.print('\n');
+  Serial.print("--------------------------");
+  Serial.print('\n');   
+    }
+}
