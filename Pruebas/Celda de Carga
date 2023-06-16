@@ -1,0 +1,132 @@
+
+#include<Servo.h>
+#include "HX711.h"
+#include <EEPROM.h>
+//Pines de entrada del HX711
+const int DOUT=A0;
+const int CLK=A1;
+//Creamos el objeto servo
+Servo marip;
+//Declaramos constantes y variables
+float k,dosif,acum=0;
+float peso=-1;
+int j=0;
+bool rep=true;
+bool bucle,depot=false;
+unsigned long tiempoa,tiempop=0;
+int tiempo= 5000;
+int tipo1,tipo2,tipo3;
+HX711 valvula;
+void setup(){
+ /*
+ EEPROM.write(0,0);
+ EEPROM.write(1,0);
+ EEPROM.write(2,0);
+ EEPROM.write(3,0);
+ EEPROM.write(4,0);
+ EEPROM.write(5,0);
+ EEPROM.write(6,0);
+ */
+  marip.attach(9);
+  Serial.begin(9600);
+  //Calibrar la celda de carga antes de empezar el proceso de vaciado
+  valvula.begin(DOUT, CLK);
+  valvula.set_scale(468467.741935); // Establecemos la escala
+  valvula.tare(20);  //El peso actual es considerado Tara.
+  marip.write(98);
+  //Asignarle a una variable el valor acumulativo del peso dosificado
+  EEPROM.get(3,acum);
+  //Asignarle a una variable el número de dosificaciones totales
+  tipo1 = EEPROM.read(0);
+  tipo2 = EEPROM.read(1);
+  tipo3 = EEPROM.read(2);
+}
+void loop(){
+ k = valvula.get_units(10);
+ tiempoa =millis();
+ if(tiempoa -tiempop >=tiempo){
+  tiempop=tiempoa;
+Serial.println(k,3);
+  if(!depot){
+Serial.print("Peso total dosificado: ");
+Serial.print(acum,3);
+Serial.print(" kg");
+Serial.print('\n');
+Serial.print("Envases Tipo 1 llenados: ");
+Serial.print(tipo1);
+Serial.print('\n');
+Serial.print("Envases Tipo 2 llenados: ");
+Serial.print(tipo2);
+Serial.print('\n');
+Serial.print("Envases Tipo 3 llenados: ");
+Serial.print(tipo3);
+Serial.print('\n');}
+if(depot){
+  if(valvula.get_units(10)-peso>0.200){
+          marip.write(8);
+          Serial.println("1era posición");
+          }else if(valvula.get_units(10)-peso<=0.200 && valvula.get_units(10)-peso>0.150 ){
+            marip.write(20);
+            Serial.println("2nda posición");
+          }else if(valvula.get_units(10)-peso<=0.150 && valvula.get_units(10)-peso>0.020 ){
+            marip.write(28);
+            Serial.println("3era posición");
+          }else if(valvula.get_units(10)-peso<=0.020 && valvula.get_units(10)-peso>0.005){
+            marip.write(38);
+            Serial.println("4rta posición");
+          }else if(valvula.get_units(10)-peso<=0.005){
+            marip.write(98);
+            Serial.println("5nta posición");
+            tiempo = 5000;
+            depot = false;
+            EEPROM.put(0,tipo1);
+            EEPROM.put(1,tipo2);
+            EEPROM.put(2,tipo3);
+            EEPROM.put(3,dosif);
+            acum = dosif;
+          }
+  
+  }
+  }
+if(k>0.031 && rep && !depot){
+  Serial.print("Peso detectado, Determine el tipo de envase:");
+  Serial.print('\n');
+  while(Serial.available()==0){}
+  j=Serial.parseInt();
+    /*
+    peso = valvula.get_units(10);
+    Serial.print("El peso en la valvula es: ");
+    Serial.print(peso,3);
+    Serial.print(" kg - ");
+    */
+    tiempo = 1500;
+    bucle = true;
+    depot = true;
+    
+    if(j==1){
+    peso = 0.031;
+    tipo1++;
+    j=0;
+    }else if(j==2){
+    peso = 0.040;
+    tipo2++;
+    j=0;
+    }else if(j==3){
+    peso = 0.057;
+    tipo3++;
+    j=0;
+    }else{
+    peso = 0.031;//Descartable déspues de arreglar el problema del while
+    tipo1++;  
+    }
+    dosif = acum + valvula.get_units(10)-peso;
+}
+if(bucle){
+  rep = false;
+    if(valvula.get_units(10)<0.005){
+      rep = true;
+      bucle = false;
+      }
+  }
+
+  }
