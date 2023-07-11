@@ -1,0 +1,40 @@
+#include <Servo.h>
+#include <HX711.h>
+
+Servo motor;
+HX711 balanza;
+void dosificacion(float peso_dosificar, float peso, float peso_envase)
+{
+  depot = true
+  if(peso >= peso_dosificar + pesoenvase){
+  while(depot){
+    if (peso_dosificar - peso_envase > 200) {
+      marip.write(176);
+      Serial.println("1era posición");
+    } else if (peso_dosificar - peso_envase <= 200 && peso_dosificar - peso_envase > 150 ) {
+      marip.write(160);
+      Serial.println("2nda posición");
+    } else if (peso_dosificar - peso_envase <= 150 && peso_dosificar - peso_envase > 75 ) {
+      marip.write(140);
+      Serial.println("3era posición");
+    } else if (peso_dosificar - peso_envase <= 75 && peso_dosificar - peso_envase > 5) {
+      marip.write(120);
+      Serial.println("4rta posición");
+    } else if peso_dosificar - peso_envase <= 5) {
+    marip.write(100);
+      Serial.println("5nta posición");
+      depot = false;
+    }
+    }
+    }
+}
+
+
+void setup() {
+  
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+}
